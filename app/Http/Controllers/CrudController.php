@@ -11,6 +11,11 @@ abstract class CrudController extends Controller
 {
     protected $data = [];
     protected $model = null;
+    
+    protected $itemName = null;
+    protected $listName = null;
+    protected $siteTitle = null;
+    protected $pageTitle = null;
 
     protected $crudSize = 10;
     protected $crudItem = 'crud_item';
@@ -27,7 +32,7 @@ abstract class CrudController extends Controller
     }
     
     private function validateAllFields() {
-        $fields = ['modelPath', 'viewPrefix', 'routePrefix'];
+        $fields = ['itemName', 'modelPath', 'viewPrefix', 'routePrefix'];
         foreach($fields as $field) {
             if (empty($this->{$field})) {
                 throw new Exception("The $" . $field . " is required in " . __CLASS__);
@@ -35,7 +40,27 @@ abstract class CrudController extends Controller
         }
     }
     
+    private function renderTitle($action) {
+        if (!$this->siteTitle) {
+            $this->siteTitle = $this->listName . ' ' . $action;
+        }
+        
+        if (!$this->pageTitle) {
+            $this->pageTitle = $this->itemName . ' '. $action;
+        }
+        
+        $this->data['site_title'] = $this->siteTitle;
+        $this->data['page_title'] = $this->pageTitle;
+    }
+    
     private function renderData() {
+        if (!$this->listName) {
+            $this->listName = str_plural($this->itemName);
+        }
+
+        $this->data['item_name'] = $this->itemName;
+        $this->data['list_name'] = $this->listName;
+        
         $this->data['crud_size'] =  $this->crudSize;
         $this->data['crud_item'] =  $this->crudItem;
         $this->data['crud_list'] =  $this->crudList;
@@ -75,6 +100,7 @@ abstract class CrudController extends Controller
     public function index(Request $request)
     {
         $this->data[$this->crudList] = $this->getFilterData($request);
+        $this->renderTitle('listing');
         return $this->renderView('index');
     }
 
@@ -86,6 +112,7 @@ abstract class CrudController extends Controller
     public function create()
     {
         $this->data[$this->crudItem] = $this->getSingleData(null);
+        $this->renderTitle('create');
         return $this->renderView('create');
     }
 
@@ -98,6 +125,7 @@ abstract class CrudController extends Controller
     public function show($id)
     {
         $this->data[$this->crudItem] = $this->getSingleData($id);
+        $this->renderTitle('detail');
         return $this->renderView('show');
     }
 
@@ -110,6 +138,7 @@ abstract class CrudController extends Controller
     public function edit($id)
     {
         $this->data[$this->crudItem] = $this->getSingleData($id);
+        $this->renderTitle('update');
         return $this->renderView('edit');
     }
     
